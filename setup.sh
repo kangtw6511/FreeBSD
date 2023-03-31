@@ -6,7 +6,7 @@ pkg update -f
 pkg upgrade -y
 
 # Install necessary packages
-pkg install -y sudo nano drm-kmod xorg firefox noto-kr lightdm-gtk-greeter xfce xfce4-goodies dbus fcitx5-gtk fcitx5-configtool ko-fcitx5-hangul wifimgr
+pkg install -y sudo nano drm-kmod xorg noto-fonts lightdm-gtk-greeter xfce xfce4-goodies dbus fcitx5-gtk fcitx5-configtool ko-fcitx5-hangul wifimgr
 
 # Configure system settings
 echo 'kld_list="i915kms"' >> /boot/loader.conf.local
@@ -49,20 +49,6 @@ sysrc kern.vty="vt"
 # Add /proc filesystem to /etc/fstab
 echo 'proc /proc procfs rw 0 0' >> /etc/fstab
 
-# Firefox optimization
-# Set the following sysctl values to optimize Firefox performance
-sysctl net.inet.tcp.delayed_ack=0
-sysctl net.inet.tcp.soreceive_stream=1
-sysctl net.inet.tcp.sendbuf_max=16777216
-sysctl net.inet.tcp.recvbuf_max=16777216
-sysctl net.inet.tcp.recvspace=4096
-sysctl net.inet.tcp.sendpace=4096
-sysctl kern.ipc.shm_allow_removed=1
-sysctl kern.ipc.shmmax=67108864
-sysctl kern.ipc.shmall=32768
-sysctl vfs.zfs.arc_max=5368709120
-sysctl kern.geom.trim.enabled=1
-
 # Increase the maximum number of open files
 sysctl kern.maxfiles=65536
 
@@ -71,4 +57,3 @@ rm -f /usr/lib/debug/*
 
 # Reboot the system
 reboot
-
