@@ -26,7 +26,7 @@ pw groupmod video -m kang
 pw groupmod wheel -m kang
 
 # Configure network settings
-sysrc -f /etc/rc.conf wlans_iwn0="wlan0"
+sysrc -f /etc/rc.conf wlans_iwm0="wlan0"
 sysrc -f /etc/rc.conf ifconfig_wlan0="WPA SYNCDHCP"
 
 # Set audio settings
@@ -34,9 +34,9 @@ mixer mic 50:50
 mixer vol 95:95
 
 # Configure input method
-echo 'export GTK_IM_MODULE=fcitx' >> /etc/profile
-echo 'export QT_IM_MODULE=fcitx' >> /etc/profile
-echo 'export XMODIFIERS="@im=fcitx"' >> /etc/profile
+echo 'export GTK_IM_MODULE=fcitx5' >> /etc/profile
+echo 'export QT_IM_MODULE=fcitx5' >> /etc/profile
+echo 'export XMODIFIERS="@im=fcitx5"' >> /etc/profile
 
 # Configure locale
 echo 'ko_KR.UTF-8 UTF-8' >> /etc/locale.gen
@@ -52,9 +52,9 @@ echo 'proc /proc procfs rw 0 0' >> /etc/fstab
 # Firefox optimization
 # Set the following sysctl values to optimize Firefox performance
 sysctl kern.ipc.shm_allow_removed=1
-sysctl kern.ipc.shmmax=67108864
+sysctl kern.ipc.shmmax=1073741824
 sysctl kern.ipc.shmall=32768
-sysctl kern.ipc.maxsockbuf=2097152
+sysctl kern.ipc.maxsockbuf=8388608
 sysctl net.local.stream.recvspace=16384
 sysctl net.local.stream.sendspace=16384
 sysctl net.inet.tcp.sendbuf_max=16777216
@@ -64,7 +64,7 @@ sysctl net.inet.tcp.recvbuf_max=16777216
 sysctl kern.maxfiles=65536
 
 # Set ZFS ARC limit
-sysctl vfs.zfs.arc_max=5368709120
+sysctl vfs.zfs.arc_max=4294967296
 
 # Enable TRIM support for SSDs
 sysctl kern.geom.trim.enabled=1
