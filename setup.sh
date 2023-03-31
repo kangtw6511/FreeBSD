@@ -49,5 +49,29 @@ sysrc -f /etc/rc.conf kern.vty="vt"
 # Add /proc filesystem to /etc/fstab
 echo 'proc /proc procfs rw 0 0' >> /etc/fstab
 
+# Firefox optimization
+# Set the following sysctl values to optimize Firefox performance
+sysctl kern.ipc.shm_allow_removed=1
+sysctl kern.ipc.shmmax=67108864
+sysctl kern.ipc.shmall=32768
+sysctl kern.ipc.maxsockbuf=2097152
+sysctl net.local.stream.recvspace=16384
+sysctl net.local.stream.sendspace=16384
+sysctl net.inet.tcp.sendbuf_max=16777216
+sysctl net.inet.tcp.recvbuf_max=16777216
+
+# Increase the maximum number of open files
+sysctl kern.maxfiles=65536
+
+# Set ZFS ARC limit
+sysctl vfs.zfs.arc_max=5368709120
+
+# Enable TRIM support for SSDs
+sysctl kern.geom.trim.enabled=1
+
+# Disable debugging symbols
+rm -f /usr/lib/debug/*
+
 # Reboot the system
 reboot
+
