@@ -33,9 +33,9 @@ mixer mic 50:50
 mixer vol 95:95
 
 # Configure input method
-echo 'export GTK_IM_MODULE=fcitx5' >> /etc/profile
-echo 'export QT_IM_MODULE=fcitx5' >> /etc/profile
-echo 'export XMODIFIERS="@im=fcitx5"' >> /etc/profile
+echo 'export GTK_IM_MODULE=fcitx' >> /etc/profile
+echo 'export QT_IM_MODULE=fcitx' >> /etc/profile
+echo 'export XMODIFIERS="@im=fcitx"' >> /etc/profile
 
 # Configure locale
 echo 'ko_KR.UTF-8 UTF-8' >> /etc/locale.gen
@@ -47,4 +47,3 @@ grep -q 'proc /proc' /etc/fstab || echo 'proc /proc procfs rw 0 0' >> /etc/fstab
 
 # Reboot the system
 reboot
-
