@@ -1,33 +1,54 @@
 #!/bin/bash
 
-# Arch Linux GNOME 최적화 스크립트
-# 최신 기술을 활용한 경량화와 성능 향상을 목표로 합니다.
+# 패키지 목록 정의
+packages=(
+  gnome-tweaks 
+  xorg-server 
+  xorg-xinit 
+  mesa 
+  xf86-video-intel 
+  firefox 
+  vlc 
+  gnome-system-monitor 
+  gedit 
+  gnome-calculator 
+  gnome-terminal 
+  gnome-control-center 
+  cpupower 
+  gnumeric 
+  ibus 
+  ibus-hangul 
+  noto-fonts-cjk
+)
 
-# 기본적인 시스템 업데이트 및 업그레이드
+# 패키지 업데이트 및 업그레이드
 sudo pacman -Syu
 
-# GNOME 최적화 패키지 설치
-sudo pacman -S gnome-tweaks xorg-server xorg-xinit mesa xf86-video-intel
-
-# 필수 응용 프로그램 설치
-sudo pacman -S firefox vlc gnome-system-monitor gedit gnome-calculator gnome-terminal gnome-control-center
+# 필요한 패키지 설치
+sudo pacman -S "${packages[@]}"
 
 # Swap 설정 변경
-sudo sysctl vm.swappiness=10
-echo "vm.swappiness=10" | sudo tee -a /etc/sysctl.d/99-sysctl.conf
+sudo tee /etc/sysctl.d/99-swappiness.conf >/dev/null <<EOF
+vm.swappiness=10
+EOF
+sudo sysctl -p
 
 # CPU 성능 모드 변경
-sudo systemctl enable --now cpupower.service
-sudo cpupower frequency-set -g performance
-echo 'ACTION=="add", SUBSYSTEM=="module", KERNEL=="intel_rapl", ATTR{parameters}=="restrict_performance=0", RUN+="/usr/bin/sh -c '\''echo 1 > /sys/module/intel_rapl/parameters/restrict_performance'\''"' | sudo tee /etc/udev/rules.d/99-restrict-performance.rules
+if grep -q 'model name.*Intel(R) Core(TM)' /proc/cpuinfo; then
+  sudo systemctl enable --now cpupower.service
+  sudo cpupower frequency-set -g performance
+  echo 'ACTION=="add", SUBSYSTEM=="module", KERNEL=="intel_rapl", ATTR{parameters}=="restrict_performance=0", RUN+="/usr/bin/sh -c '\''echo 1 > /sys/module/intel_rapl/parameters/restrict_performance'\''"' | sudo tee /etc/udev/rules.d/99-restrict-performance.rules >/dev/null
+else
+  echo "This script is intended for Intel CPUs only. Skipping CPU power management optimization."
+fi
 
-# Bluetooth 데몬 비활성화
-sudo systemctl disable --now bluetooth.service
+# Bluetooth 데몬 선택적으로 비활성화
+read -p "블루투스 데몬을 비활성화 하시겠습니까? (y/n) " disable_bluetooth
+if [[ $disable_bluetooth =~ ^[Yy]$ ]]; then
+  sudo systemctl disable --now bluetooth.service
+fi
 
-# GNOME 알림 비활성화
-gsettings set org.gnome.desktop.notifications show-banners false
-
-# GDM 테마 변경
+# GDM 설정 변경
 sudo sed -i 's/^#background=/background=/' /etc/gdm/custom.conf
 
 # 불필요한 응용 프로그램 제거
@@ -36,29 +57,19 @@ sudo pacman -R epiphany gnome-contacts gnome-maps gnome-weather gnome-photos gno
 # 로그인 화면 배경화면 변경
 sudo cp /path/to/background.png /usr/share/backgrounds/gnome/
 
+# 불필요한 패키지 제거
+sudo pacman -Rcns $(pacman -Qtdq)
+
 # 파일 시스템 최적화
 sudo systemctl enable --now fstrim.timer
 
-# 스프래드시트 기본 프로그램 변경
-xdg-mime default org.gnome.gnumeric.desktop application/vnd.ms-excel
-
-# 한글 입력기 설치 및 설정
-sudo pacman -S --noconfirm ibus ibus-hangul noto-fonts-cjk
+# 한글 입력기 설정
 gsettings set org.gnome.desktop.input-sources sources "[('ibus', 'hangul')]"
 gsettings set org.gnome.desktop.input-sources xkb-options "['korean:ralt_hangul', 'korean:rctrl_hanja']"
 
 # 스크린샷 저장 위치 변경
 mkdir -p ~/Pictures/Screenshots
-gsettings set org.gnome.gnome-screenshot auto-save-directory "file:///home/USERNAME/Pictures/Screenshots"
-
-# 폰트 설정 변경
-gsettings set org.gnome.desktop.interface font-name "Noto Sans CJK KR 10"
-gsettings set org.gnome.desktop.interface document-font-name "Noto Sans CJK KR 10"
-gsettings set org.gnome.desktop.interface monospace-font-name "Noto Sans Mono CJK KR 10"
-
-# 추가 설정
-echo "alias ls='ls --color=auto'" >> ~/.bashrc
-echo "alias ll='ls -alF'" >> ~/.bashrc
+gsettings set org.gnome.gnome-screenshot auto-save-directory "file:///home/$(whoami)/Pictures/Screenshots"
 
 # 종료 메시지
 echo "설정이 완료되었습니다. 컴퓨터를 재부팅하세요."
