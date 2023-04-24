@@ -1,0 +1,74 @@
+#!/bin/bash
+
+# Set disk device
+DISK="/dev/sda"
+
+# Set partition sizes
+BOOT_SIZE="512M"
+SWAP_SIZE="8G"
+ROOT_SIZE="20G"
+HOME_SIZE=""
+
+# Check internet connection
+ping -c 3 google.com || (echo "Internet connection not detected, exiting." && exit)
+
+# Partition the disk using fdisk
+(echo g; echo n; echo 1; echo ""; echo "+${BOOT_SIZE}"; echo t; echo 1; echo 1; echo n; echo 2; echo ""; echo "+${SWAP_SIZE}"; echo t; echo 2; echo 19; echo n; echo 3; echo ""; echo "+${ROOT_SIZE}${HOME_SIZE}"; echo w) | fdisk "${DISK}"
+
+# Format partitions
+mkfs.fat -F 32 "${DISK}1"
+mkswap "${DISK}2"
+mkfs.ext4 "${DISK}3"
+
+# Mount partitions
+swapon "${DISK}2"
+mount "${DISK}3" /mnt
+mkdir /mnt/boot
+mount "${DISK}1" /mnt/boot
+
+# Install the base system
+echo "Installing the base system..."
+sleep 5
+basestrap /mnt base linux syslinux intel-ucode
+
+# Generate fstab
+fstabgen -U /mnt >> /mnt/etc/fstab
+
+# Configure syslinux bootloader
+echo "Configuring syslinux bootloader..."
+sleep 5
+sed -i 's/APPEND root=.*/APPEND root=\/dev\/sda3 rw intel_pstate=enable/' /mnt/boot/syslinux/syslinux.cfg
+sed -i 's/TIMEOUT 50/TIMEOUT 10/' /mnt/boot/syslinux/syslinux.cfg
+extlinux --install /mnt/boot/syslinux
+
+# Install additional packages
+echo "Installing additional packages..."
+sleep 5
+pacstrap /mnt networkmanager xorg-server xorg-apps xf86-video-intel lightdm lightdm-gtk-greeter cinnamon gnome-terminal firefox
+
+# Generate locale
+echo "Generating locale..."
+echo "LANG=en_US.UTF-8" > /mnt/etc/locale.conf
+echo "en_US.UTF-8 UTF-8" >> /mnt/etc/locale.gen
+arch-chroot /mnt locale-gen
+
+# Set hostname
+echo "Setting hostname..."
+echo "myhostname" > /mnt/etc/hostname
+
+# Configure network
+echo "Configuring network..."
+echo "127.0.0.1 localhost" > /mnt/etc/hosts
+echo "::1 localhost" >> /mnt/etc/hosts
+echo "127.0.1.1 myhostname.localdomain myhostname" >> /mnt/etc/hosts
+
+# Set root password
+echo "Setting root password..."
+arch-chroot /mnt passwd
+
+# Install bootloader
+echo "Installing bootloader..."
+sleep 5
+arch-chroot /mnt syslinux-install_update -i -a -m
+
+echo "Installation complete.
